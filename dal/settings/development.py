@@ -13,6 +13,7 @@ DATABASES = {
         'PASSWORD': 'fakepass',
         'HOST': '',
         'PORT': '',
+        'TEST_NAME': 'dal_test'
     }
 }
 

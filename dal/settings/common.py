@@ -195,6 +195,7 @@ LOGGING = {
 # Project Config
 AUTH_PROFILE_MODULE = 'users.Profile'
 LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/usuarios/login'
 
 # =====================================
 # Third party Configuration
@@ -219,6 +220,7 @@ def custom_show_toolbar(request):
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
+    'INTERCEPT_REDIRECTS': False,
 }
 
 
