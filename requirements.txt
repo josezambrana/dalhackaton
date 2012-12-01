@@ -1,0 +1,13 @@
+Django>=1.4.2
+wsgiref>=0.1.2
+django-debug-toolbar>=0.9.4
+South>=0.7.6
+Fabric>=1.5.0
+gunicorn>=0.15.0
+gevent>=0.13.8
+psycopg2>=2.4.5
+django-taggit>=0.9.3
+django-less>=0.4
+zero-common>=0.1.2
+zero-thumbnails>=0.1.2
+zero-users>=0.1.5
