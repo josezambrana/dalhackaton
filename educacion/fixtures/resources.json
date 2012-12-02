@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "educacion.resource", "fields": {"lesson": 1, "type": "DOC", "file": "recursos/document.pdf"}}, {"pk": 2, "model": "educacion.resource", "fields": {"lesson": 1, "type": "VIDEO", "file": "recursos/video.flv"}}]

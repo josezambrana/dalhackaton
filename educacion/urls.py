@@ -34,5 +34,5 @@ urlpatterns = patterns('',
     url(r'^recursos/nuevo\.(?P<format>html|json)$', CreateResource.as_view(), name="educacion_resourcecreate"),
     url(r'^examenes/nuevo', CreateExam.as_view(), name="educacion_examcreate"),
     url(r'^preguntas/nuevo', CreateQuestion.as_view(), name="educacion_questioncreate"),
-    url(r'^opciones/nuevo', CreateOption.as_view(), name="educacion_opcioncreate"),
+    url(r'^opciones/nuevo', CreateOption.as_view(), name="educacion_optioncreate"),
 )

@@ -103,6 +103,9 @@ class Resource(models.Model):
     class Meta:
         verbose_name = _(u'Recurso')
         verbose_name_plural = _(u'Recursos')
+
+    def __unicode__(self):
+        return unicode(self.file.url)
     
 
 class Exam(models.Model):
@@ -117,12 +120,14 @@ class Exam(models.Model):
     max_value = models.IntegerField(_(u'Puntaje Máximo'), default=100)
     
     #: Muestra la prueba cuando se esta reproduciondo un video o audio
-    seconds = models.IntegerField(_(u'Mostrar en'), null=True)
+    seconds = models.IntegerField(_(u'Mostrar en'), null=True, blank=True)
     
     class Meta:
         verbose_name = _(u'Prueba')
         verbose_name_plural = _(u'Pruebas')
     
+    def __unicode__(self):
+        return unicode(u'Examen: %s ' % self.resource)
 
 class Question(models.Model):
     """
@@ -153,6 +158,10 @@ class Question(models.Model):
 
 
 class Option(models.Model):
+    """
+    Opciones de respuesta para las preguntas.
+    """
+    
     #: Valor
     value = models.CharField(max_length=255, verbose_name=_(u'Valor'))
     
@@ -160,7 +169,7 @@ class Option(models.Model):
     correct = models.BooleanField(_(u'Correcto?'))
     
     #: Orden o peso
-    weight = models.IntegerField(_(u'Orden en el que aparece'))
+    weight = models.IntegerField(_(u'Peso'))
 
     #: Pregunta a la que pertenece
     question = models.ForeignKey(Question, verbose_name=_(u'Opción'))

@@ -228,7 +228,7 @@ class CreateExam(LoginRequiredMixin, CreateView):
     templates = {
         'html': 'page.exam_create.html'
     }
-
+    template_object = 'obj.exam.html'
 
 class CreateQuestion(LoginRequiredMixin, CreateView):
     """
@@ -244,6 +244,7 @@ class CreateQuestion(LoginRequiredMixin, CreateView):
     templates = {
         'html': 'page.question_create.html'
     }
+    template_object = 'obj.question.html'
 
 
 class CreateOption(LoginRequiredMixin, CreateView):
@@ -261,3 +262,4 @@ class CreateOption(LoginRequiredMixin, CreateView):
         'html': 'page.option_create.html'
     }
     
+    template_object = 'obj.option.html'

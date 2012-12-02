@@ -198,13 +198,13 @@ class ResourceTest(TestBase):
             "lesson": 1,
         }
     
-    def test_create_lesson(self):
+    def test_create_resource(self):
         """
-        Como usuario debo ser capaz de crear una lección.
+        Como usuario debo ser capaz de cargar un recurso a una lección.
         """
 
         # Se verifica que los usuarios visitantes no puedan ingresar al formulario
-        self.assertLoginRequired('educacion_lessoncreate')
+        self.assertLoginRequired('educacion_resourcecreate')
         
         self.login('admin', 'fakepass')
 
@@ -219,4 +219,114 @@ class ResourceTest(TestBase):
         assert response_json['success']
         assert 'type' in response_json
         assert response_json['type'] == 'DOC'
+
+
+class ExamTest(TestBase):
+    """
+    Verifica el funcionamiento de los examenes
+    """
+    
+    fixtures = ['courses', 'programs', 'users', 'lessons', 'resources']
+    
+    def setUp(self):
+        super(ExamTest, self).setUp()
+        self.data = {
+            "resource": 2,
+            "max_value": 100,
+            "seconds": 10
+        }
+    
+    def test_create_exam(self):
+        """
+        Como usuario debo ser capaz de crear un examen para un recurso.
+        """
+        
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_examcreate')
+        
+        self.login('admin', 'fakepass')
+
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_examcreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear un nuevo programa
+        response = self.client_post_ajax('educacion_examcreate', data=self.data)
+        assert response['success']
+        logger.info(' response: %s ' % response)
+
+
+class QuestionTest(TestBase):
+    """
+    Verifica el funcionamiento del gestor de preguntas.
+    """
+    
+    fixtures = ['courses', 'programs', 'users', 'lessons', 'resources', 'exams']
+    
+    def setUp(self):
+        super(QuestionTest, self).setUp()
+        self.data = {
+            "question": "Como se hace esto?",
+            "percent": 50,
+            "exam": 1,
+            "reply": "facil, como si nada",
+            "explanation": "solo tienes que mirar y esperar",
+            "weight": 10
+        }
+    
+    def test_create_question(self):
+        """
+        Como usuario debo ser capaz de crear una pregunta en un examen.
+        """
+        
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_questioncreate')
+        
+        self.login('admin', 'fakepass')
+
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_questioncreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear una nueva pregunta
+        response = self.client_post_ajax('educacion_questioncreate', data=self.data)
+        assert response['success']
+        logger.info(' response: %s ' % response)
+
+
+class OptionTest(TestBase):
+    """
+    Verifica el funcionamiento del gestor de opciones
+    """
+    
+    fixtures = ['courses', 'programs', 'users', 'lessons', 'resources', 'exams', 'questions']
+    
+    def setUp(self):
+        super(OptionTest, self).setUp()
+        self.data = {
+            "value": "A",
+            "correct": True,
+            "question": "1",
+            "weight": 1
+        }
+    
+    def test_create_option(self):
+        """
+        Como usuario debo ser capaz de crear la opción de respuesta para una pregunta.
+        """
+        
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_optioncreate')
+        
+        self.login('admin', 'fakepass')
+        
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_optioncreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear una opcion para una pregunta
+        response = self.client_post_ajax('educacion_optioncreate', data=self.data)
+        assert response['success']
+        logger.info(' response: %s ' % response)
+
 

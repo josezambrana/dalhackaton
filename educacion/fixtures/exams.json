@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "educacion.exam", "fields": {"seconds": 100, "max_value": 100, "resource": 2}}, {"pk": 2, "model": "educacion.exam", "fields": {"seconds": null, "max_value": 100, "resource": 1}}]
