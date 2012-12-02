@@ -1,3 +1,30 @@
-<div class='resource'>
-    <a href="{{object.file.url}}">{{ object.file.url }}</a>
-</div>
+<tr>
+    <td>
+        {% if object.type == 'VIDEO' %}
+            <a href="#modal-object-{{ object.id }}" 
+               class="object" role="button" 
+               data-toggle='modal'>
+               {{ object.name }}
+            </a>
+
+        <div id="modal-object-{{ object.id }}" class='modal hide fade'>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3>{{ object.name }}</h3>
+            </div>
+            <div class="modal-body">
+                {% if object.type == 'VIDEO' %}
+                    <video width="530" height="386" controls="controls">
+                        <source src="{{ object.file.url }}" type="{{ object.mimetype }}">
+                    </video>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+            <a href="{{ object.file.url }}">
+                {{ object.name}}
+            </a>
+        {% endif %}
+    </td>
+    <td>{{ object.type }}</td>
+</tr>

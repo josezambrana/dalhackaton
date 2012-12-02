@@ -1,5 +1,116 @@
 {% extends 'base/layout.html' %}
+{% load i18n educacion_tags %}
 
 {% block body %}
-    <div class='page-header'>{{ object.name }}</div>
+<div class='page-header span12'>
+    <h1>{{ object.name }}
+        
+        {% if request.user.is_authenticated and request.user.username != object.user.username%}
+            {% if user|is_enrolled:object %}
+                <a href="{% url educacion_courseunroll object.id %}"
+                    class='btn btn-primary action-unroll action-roll'>
+                    {% trans 'Desinscribirse' %}
+                </a>
+            {% else %}
+                <a href="{% url educacion_courseenroll object.id %}"
+                    class='btn btn-primary action-enroll action-roll'>
+                    {% trans 'Inscribirse' %}
+                </a>
+            {% endif %}
+        {% endif %}
+        
+        {% if request.user.username == object.user.username %}
+            <a class="btn btn-primary" data-toggle="modal" 
+                href="#modal">Añadir Tema</a>
+            <div id="modal" class='hide modal fade'>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h3>Añadir Tema</h3>
+                </div>
+                <div class="modal-body">
+                    <form id="lesson-form" method="POST" 
+                          action="{% url educacion_lessoncreate %}" class="form-horizontal"> 
+                       {% csrf_token %}
+                        <div class="control-group ">
+                            <label class="control-label" for="id_name">Nombre</label>
+                            <div class="controls">
+                                <input class='span3' id="id_name" type="text" name="name" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="control-group ">
+                            <label class="control-label" for="id_description">Descripción</label>
+                            <div class="controls">
+                                <textarea class='span3' id="id_description" rows="10" cols="40" name="description"></textarea>
+                            </div>
+                        </div>
+                        <input type="hidden" name="course" value="{{ object.id }}" />
+                        <input type="hidden" name="orden" value="1" />
+                    </form>
+                </div>
+
+                <div id="save-lesson" class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Cerrar</button>
+                    <button id="save-form" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        {% endif %}
+    </h1>
+</div>
+<div class='span12'>
+    <div class='row'>
+        <span class='span4'>
+            <p>
+                <img src="{{ STATIC_URL }}images/360x240.gif" class="img-polaroid">
+            </p>
+            <p>
+                {{ object.description }}
+            </p>
+        </span>
+        <div class='span8'>
+            <div class='page-header'>
+                <h3>Lecciones</h3>
+            </div>
+            <table id="lessons" class='table table-striped'>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in object_list %}
+                    <tr>
+                        <td>
+                            <a href="{{ lesson.get_absolute_url }}">{{ lesson.name }}</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock body %}
+
+{% block bottomscripts %}
+<script type='text/javascript' src="{{ STATIC_URL }}js/jquery.educacion.js"></script>
+<script type='text/javascript'>
+(function($) {
+    $('.page-header').roll('.action-roll')
+
+    $('#save-form').click(function(){
+        $form = $('#lesson-form')
+        $.post($form.attr('action'), $form.serialize(), function(json){
+            console.log('post form')
+            if (json.success) {
+                $('#modal').modal('hide');
+                $('#less-form').find('input').val('')
+                $row = $(json.object)
+                $('#lessons').append($row)
+                $row.addClass('success')
+            }
+        }, 'json')
+    })
+})(jQuery)
+    
+</script>
+{% endblock %}

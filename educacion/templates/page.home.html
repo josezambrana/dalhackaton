@@ -1,0 +1,17 @@
+{% extends 'base/layout.html' %}
+
+{% block beforebody %}
+    <div class="hero-unit ">
+        <h1>Educacion Ciudadana</h1>
+        <p>
+            Web app para crear cursos en linea que permite la educación de los 
+            ciudadanos de una región
+        </p>
+        <p><a class="btn btn-primary btn-large">Aprender Más »</a></p>
+    </div> 
+{% endblock %}
+
+{% block body %}
+    {% include 'inc.course_list.html' %}
+{% endblock %}
+

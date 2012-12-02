@@ -1,6 +1,5 @@
-<div class='lesson'>
-    <h3>{{ object.name }}</h3>
-    <p>
-        {{ object.description }}
-    </p>
+<tr class='lesson'>
+    <td>
+        <a href="{{ object.get_absolute_url }}">{{ object.name }}</a>
+    </td>
 </div>

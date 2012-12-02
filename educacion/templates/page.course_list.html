@@ -1,11 +1,16 @@
 {% extends 'base/layout.html' %}
+{% load i18n %}
 
 {% block body %}
-<ul class=''>
-    {% for object in object_list %}
-    <li>
-        <a href="{{ object.get_absolute_url }}">{{ object.name }}</a>
-    </li>
-    {% endfor %}
-</ul>
+
+<div class='page-header span12'>
+    <h1>Cursos 
+    {% if request.user.is_authenticated %}
+        <a href="{% url educacion_coursecreate %}" class="btn btn-primary">Crear un curso</a>
+    {% endif %}
+    </h1>
+</div>
+
+{% include 'inc.course_list.html' %}
+
 {% endblock body %}

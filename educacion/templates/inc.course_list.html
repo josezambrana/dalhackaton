@@ -1,0 +1,26 @@
+{% for object in object_list %}
+{% if not forloop.counter|divisibleby:2 %}
+<div class='span12 show-grid '>
+    <div class='row'>
+{% endif %}
+        <div class='span6'>
+            <div class='row'>
+                <span class='span2'>
+                    <img src="{{ STATIC_URL }}images/140x140.gif" class="img-polaroid">
+                </span>
+                <div class='span4'>
+                    <h3>Curso: <a href="{{ object.get_absolute_url }}">{{ object.name }}</a></h3>
+                    <p>
+                    {{ object.description }}
+                    </p>
+                    <p>
+                        Publicado por: <a href="{% url users_profile object.user.username %}">{{ object.user.get_full_name }}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+{% if forloop.counter|divisibleby:2 %}
+    </div>
+</div>
+{% endif %}
+{% endfor %}

@@ -1,0 +1,159 @@
+{% extends 'base/layout.html' %}
+{% load i18n educacion_tags %}
+
+{% block body %}
+<div class="page-header span12">
+    <h1>{{ object.course.name }}
+        {% if request.user.is_authenticated and request.user.username != object.course.user.username %}
+            {% if user|is_enrolled:object.course %}
+                <a href="{% url educacion_courseunroll object.course.id %}"
+                    class='btn btn-primary action-unroll action-roll'>
+                    {% trans 'Desinscribirse' %}
+                </a>
+            {% else %}
+                <a href="{% url educacion_courseenroll object.course.id %}"
+                    class='btn btn-primary action-enroll action-roll'>
+                    {% trans 'Inscribirse' %}
+                </a>
+            {% endif %}
+        {% endif %}
+    </h1>
+</div>
+
+<iframe id="hidden" name="hidden" class="hide"></iframe>
+
+<div id="resource-form-modal" class='hide modal fade'>
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Añadir Recurso</h3>
+    </div>
+
+    <div class="modal-body">
+        <form id="resource-form" method="POST" 
+            action="{% url educacion_resourcecreate "json" %}" 
+            target="hidden"
+            enctype="multipart/form-data"
+            class="form-horizontal"> 
+
+            {% csrf_token %}
+
+            <div class="control-group">
+                <label class="control-label" for="id_name">Nombre</label>
+                <div class="controls">
+                    <input class='span3' id="id_name" type="text" name="name" maxlength="255">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="id_file">Archivo</label>
+                <div class="controls">
+                    <input type="file" name="file" id="id_file" />
+                </div>
+            </div>
+            <input type="hidden" name="lesson" value="{{ object.id }}" />
+        </form>
+    </div>
+
+    <div id="save-resource" class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cerrar</button>
+        <button id="save-form" class="btn btn-primary">Cargar Recurso</button>
+    </div>
+</div>
+
+<div class='span12'>
+    <div class='row'>
+        <div class='span4'>
+            <p>
+                <img src="{{ STATIC_URL }}images/360x240.gif" class="img-polaroid">
+            </p>
+            <h4>{{ object.name }}</h4>
+            <p>
+                {{ object.description }}
+            </p>
+        </div>
+        <div class='span8'>
+            <div class='page-header'>
+                <h3>
+                    Recursos
+                    <a class='btn btn-primary' href="#resource-form-modal" data-toggle='modal'>
+                        Cargar Recurso.
+                    </a>
+                </h3>
+            </div>
+            <table id="resources" class='table table-striped'>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% for resource in object_list %}
+                        <tr>
+                            <td>
+                                {% if resource.type == 'VIDEO' %}
+                                    <a href="#modal-resource-{{ resource.id }}" 
+                                       class="resource" role="button" 
+                                       data-toggle='modal'>
+                                        {{ resource.name }}
+                                    </a>
+                                {% else %}
+                                    <a href="{{ resource.file.url }}">
+                                        {{ resource.name}}
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td>{{ resource.type }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% for resource in object_list %}
+{% if resource.type == 'VIDEO' %}
+<div id="modal-resource-{{ resource.id }}" class='modal hide fade'>
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>{{ resource.name }}</h3>
+    </div>
+    <div class="modal-body">
+        {% if resource.type == 'VIDEO' %}
+            <video width="530" height="386" controls="controls">
+                <source src="{{ resource.file.url }}" type="{{ resource.mimetype }}">
+            </video>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block bottomscripts %}
+<script type='text/javascript' src="{{ STATIC_URL }}js/jquery.educacion.js"></script>
+<script src="{{ STATIC_URL }}js/flowplayer.min.js"></script>
+<script type='text/javascript'>
+(function($) {
+    $('.page-header').roll('.action-roll')
+
+    
+    $('#save-form').log('save-form').click(function(){
+        console.log('save-form click');
+        $('#resource-form').submit();
+        $('#hidden').load(function(){
+            $iframe = $(this);
+            var json = $.parseJSON($iframe.contents().text());
+
+            $row = $(json.object).addClass('success')
+            $('#resources tbody').append($row)
+
+            $('#resource-form-modal').modal('hide')
+            $('#resource-form').find('input').val('')
+        })
+    })
+})(jQuery);
+</script>
+{% endblock %}
