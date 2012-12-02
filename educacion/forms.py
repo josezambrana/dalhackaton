@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
+import logging
 from django import forms
 
 from educacion.models import Course
 from educacion.models import Program
+from educacion.models import Lesson
+from educacion.models import Resource
+from educacion.models import Exam
+from educacion.models import Question
+from educacion.models import Option
+
+logger = logging.getLogger('project.simple')
 
 
 class WithOwnerMixin(object):
@@ -57,7 +65,7 @@ class ProgramForm(WithOwnerMixin, forms.ModelForm):
         fields = ('name', 'description')
 
 
-class LessonForm(forms.ModelForm):
+class LessonForm(WithOwnerMixin, forms.ModelForm):
     """
     Formulario para crear y editar Lecciones
     """
@@ -67,15 +75,38 @@ class LessonForm(forms.ModelForm):
         fields = ('description', 'orden', 'course')
 
 
+MIMETYPES = {
+    'video/x-flv': 'VIDEO',
+    'application/pdf': 'DOC',
+    'audio/mpeg': 'AUDIO'
+}
+
 class ResourceForm(forms.ModelForm):
     """
     Formulario para crear recursos para una lección.
     """
-
+    
     class Meta:
         model = Resource
         fields = ('file', 'lesson')
 
+    def clean_file(self):
+        logger.info('***** ResourceForm.clean file')
+        file = self.cleaned_data.get('file')
+
+        logger.info('    * file.content_type: %s ' % file.content_type)
+        if file.content_type not in MIMETYPES:
+            raise forms.ValidationError(u'Archivo no permitido')
+
+        self.type = MIMETYPES.get(file.content_type)
+        logger.info('    * type: %s ' % self.type)
+        return file
+
+    def save(self):
+        resource = super(ResourceForm, self).save(commit=False)
+        resource.type = self.type
+        resource.save()
+        return resource
 
 class ExamForm(forms.ModelForm):
     """

@@ -8,6 +8,12 @@ from educacion.views import EnrollView
 from educacion.views import CreateProgram
 from educacion.views import DetailProgram
 
+from educacion.views import CreateLesson
+from educacion.views import CreateResource
+from educacion.views import CreateExam
+from educacion.views import CreateQuestion
+from educacion.views import CreateOption
+
 
 urlpatterns = patterns('',
     # Courses
@@ -21,4 +27,12 @@ urlpatterns = patterns('',
     # Programs
     url(r'^programas/nuevo', CreateProgram.as_view(), name="educacion_programcreate"),
     url(r'^programas/(?P<slug>[\w\-]+)$', DetailProgram.as_view(), name='educacion_programshow'),
+    
+    # Lecciones
+    url(r'^lecciones/nuevo$', CreateLesson.as_view(), name="educacion_lessoncreate"),
+    url(r'^recursos/nuevo$', CreateResource.as_view(), name="educacion_resourcecreate"),
+    url(r'^recursos/nuevo\.(?P<format>html|json)$', CreateResource.as_view(), name="educacion_resourcecreate"),
+    url(r'^examenes/nuevo', CreateExam.as_view(), name="educacion_examcreate"),
+    url(r'^preguntas/nuevo', CreateQuestion.as_view(), name="educacion_questioncreate"),
+    url(r'^opciones/nuevo', CreateOption.as_view(), name="educacion_opcioncreate"),
 )

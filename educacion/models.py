@@ -128,7 +128,7 @@ class Question(models.Model):
     """
     Pregunta realizada para una prueba
     """
-
+    
     #: Prequnta que se hace
     question = models.CharField(max_length=512, verbose_name=_(u'Pregunta'))
     

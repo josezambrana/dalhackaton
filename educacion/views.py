@@ -12,9 +12,20 @@ from common.views import ListView
 from common.views import LoginRequiredMixin
 
 from educacion.models import Course
-from educacion.forms import CourseForm
 from educacion.models import Program
+from educacion.models import Lesson
+from educacion.models import Resource
+from educacion.models import Exam
+from educacion.models import Question
+from educacion.models import Option
+
+from educacion.forms import CourseForm
 from educacion.forms import ProgramForm
+from educacion.forms import LessonForm
+from educacion.forms import ResourceForm
+from educacion.forms import ExamForm
+from educacion.forms import QuestionForm
+from educacion.forms import OptionForm
 
 
 logger = logging.getLogger('project.simple')
@@ -158,7 +169,7 @@ class DetailProgram(DetailView):
     }
 
     
-class CreateLesson(LoginRequiredMixin, CreateView):
+class CreateLesson(LoginRequiredMixin, WithOwnerMixin, CreateView):
     """
     Vista para crear una lección.
     """
@@ -172,5 +183,81 @@ class CreateLesson(LoginRequiredMixin, CreateView):
     templates = {
         'html': 'page.lesson_create.html'
     }
+    template_object = 'obj.lesson.html'
     
 
+class CreateResource(LoginRequiredMixin, CreateView):
+    """
+    Vista para cargar un recurso.
+    """
+    
+    app_name = 'resources'
+    view_name = 'resource_create'
+    
+    model = Resource
+    form_class = ResourceForm
+
+    templates = {
+        'html': 'page.resource_create.html'
+    }
+
+    template_object = 'obj.resource.html'
+
+    def get_context_data(self, *args, **kwargs):
+        logger.info('***** get_context_data')
+        context = super(CreateResource, self).get_context_data(*args, **kwargs)
+        
+        if self.get_format() == 'json':
+            logger.info("    * content_type?: %s " % self.object.type)
+            context['type'] = self.object.type
+        
+        return context
+    
+
+class CreateExam(LoginRequiredMixin, CreateView):
+    """
+    Vista para cargar un Examen.
+    """
+    
+    app_name = 'exams'
+    view_name = 'exam_create'
+    
+    model = Exam
+    form_class = ExamForm
+
+    templates = {
+        'html': 'page.exam_create.html'
+    }
+
+
+class CreateQuestion(LoginRequiredMixin, CreateView):
+    """
+    Vista para cargar una pregunta.
+    """
+    
+    app_name = 'questions'
+    view_name = 'question_create'
+    
+    model = Question
+    form_class = QuestionForm
+
+    templates = {
+        'html': 'page.question_create.html'
+    }
+
+
+class CreateOption(LoginRequiredMixin, CreateView):
+    """
+    Vista para cargar una opcion para una pregunta.
+    """
+    
+    app_name = 'options'
+    view_name = 'option_create'
+    
+    model = Option
+    form_class = OptionForm
+
+    templates = {
+        'html': 'page.option_create.html'
+    }
+    

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
+from os import path
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.core.urlresolvers import reverse
+from django.utils import simplejson
 
 from common.tests import TestBase
 
@@ -140,4 +142,81 @@ class ProgramTest(TestBase):
         # Se verifica que el usuario pueda ver los detalles de un programa
         response = self.client_get('educacion_programshow', args=['tecnico-en-agronomia']) 
         assert response.status_code == 200
+
+
+class LessonTest(TestBase):
+    """
+    Verifica el funcionamiento del gestor de lecciones.
+    """
+    
+    fixtures = ['courses', 'programs', 'users']
+    
+    def setUp(self):
+        super(LessonTest, self).setUp()
+        self.data = {
+            'name': 'Leccion 1',
+            'description': 'Introduccion',
+            'orden': 1,
+            'course': 1,
+        }
+    
+    def test_create_lesson(self):
+        """
+        Como usuario debo ser capaz de crear una lección.
+        """
+
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_lessoncreate')
         
+        self.login('admin', 'fakepass')
+
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_lessoncreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear un nuevo programa
+        response = self.client_post_ajax('educacion_lessoncreate', data=self.data)
+        assert response['success']
+
+
+STATIC_PATH = path.join(path.abspath(path.dirname(__file__)), 'static')
+NOT_SUPPORTED_PATH = path.join(STATIC_PATH, 'file.txt')
+DOC_PATH = path.join(STATIC_PATH, 'document.pdf')
+VIDEO_PATH = path.join(STATIC_PATH, 'video.jpg')
+
+class ResourceTest(TestBase):
+    """
+    Verifica el funcionamiento del gestor de recursos.
+    """
+    
+    fixtures = ['courses', 'programs', 'users', 'lessons']
+    
+    def setUp(self):
+        super(ResourceTest, self).setUp()
+        self.data = {
+            "file": open(DOC_PATH),
+            "lesson": 1,
+        }
+    
+    def test_create_lesson(self):
+        """
+        Como usuario debo ser capaz de crear una lección.
+        """
+
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_lessoncreate')
+        
+        self.login('admin', 'fakepass')
+
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_resourcecreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear un nuevo programa
+        response = self.client_post('educacion_resourcecreate', args=['json'], data=self.data)
+        response_json = simplejson.loads(response.content)
+        assert response.status_code == 200
+        assert response_json['success']
+        assert 'type' in response_json
+        assert response_json['type'] == 'DOC'
+
