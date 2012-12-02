@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "educacion.option", "fields": {"weight": 1, "question": 1, "correct": true, "value": "A"}}, {"pk": 2, "model": "educacion.option", "fields": {"weight": 2, "question": 1, "correct": false, "value": "B"}}, {"pk": 3, "model": "educacion.option", "fields": {"weight": 3, "question": 1, "correct": false, "value": "C"}}]

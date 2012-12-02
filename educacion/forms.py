@@ -9,6 +9,7 @@ from educacion.models import Resource
 from educacion.models import Exam
 from educacion.models import Question
 from educacion.models import Option
+from educacion.models import Selection
 
 logger = logging.getLogger('project.simple')
 
@@ -22,7 +23,7 @@ class WithOwnerMixin(object):
         self.user = kwargs.pop('user')
         super(WithOwnerMixin, self).__init__(*args, **kwargs)
 
-    def save(self):
+    def save(self, *args, **kwargs):
         obj = super(WithOwnerMixin, self).save(commit=False)
         
         # Datos del autor
@@ -72,13 +73,19 @@ class LessonForm(WithOwnerMixin, forms.ModelForm):
     
     class Meta:
         model = Lesson
-        fields = ('description', 'orden', 'course')
+        fields = ('name', 'description', 'course', 'orden')
 
 
 MIMETYPES = {
     'video/x-flv': 'VIDEO',
+    'video/mpeg': 'VIDEO',
+    'video/ogg': 'VIDEO',
+    'video/x-theora+ogg': 'VIDEO',
+    'video/mp4': 'VIDEO',
+    'video/webm': 'VIDEO',
     'application/pdf': 'DOC',
-    'audio/mpeg': 'AUDIO'
+    'audio/mpeg': 'AUDIO',
+    'audio/ogg': 'AUDIO',
 }
 
 class ResourceForm(forms.ModelForm):
@@ -88,25 +95,37 @@ class ResourceForm(forms.ModelForm):
     
     class Meta:
         model = Resource
-        fields = ('file', 'lesson')
+        fields = ('name', 'file', 'lesson')
+
+    def __init__(self, *args, **kwargs):
+        logger.info("***** ResourceForm.__init__")
+        self.user = kwargs.pop('user')
+        return super(ResourceForm, self).__init__(*args, **kwargs)
 
     def clean_file(self):
-        logger.info('***** ResourceForm.clean file')
+        logger.info("***** clean_file")
         file = self.cleaned_data.get('file')
-
-        logger.info('    * file.content_type: %s ' % file.content_type)
+        logger.info("    * file.content_type: %s " % file.content_type)
         if file.content_type not in MIMETYPES:
             raise forms.ValidationError(u'Archivo no permitido')
 
         self.type = MIMETYPES.get(file.content_type)
-        logger.info('    * type: %s ' % self.type)
+        self.mimetype = file.content_type
         return file
 
     def save(self):
         resource = super(ResourceForm, self).save(commit=False)
+        logger.info("    * name: %s " % resource.name)
+        logger.info("    * file: %s " % resource.file)
+        resource.user = self.user
+        logger.info("    * user: %s " % resource.user)
         resource.type = self.type
+        logger.info("    * type: %s " % resource.type)
+        resource.mimetype = self.mimetype
+        logger.info("    * mimetype: %s " % resource.mimetype)
         resource.save()
         return resource
+
 
 class ExamForm(forms.ModelForm):
     """
@@ -134,3 +153,24 @@ class OptionForm(forms.ModelForm):
     class Meta:
         model = Option
         fields = ('value', 'correct', 'weight', 'question')
+
+class SelectionForm(forms.ModelForm):
+    """
+    Formulario para seleccionar la respuesta a una pregunta
+    """
+
+    class Meta:
+        model = Selection
+        fields = ('question', 'opcion')
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(SelectionForm, self).__init__(*args, **kwargs)
+
+    def save(self):
+        selection = super(SelectionForm, self).save(commit=False)
+        selection.exam = selection.question.exam
+        selection.user = self.user
+        selection.save()
+        return selection
+

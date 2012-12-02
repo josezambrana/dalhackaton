@@ -2,8 +2,11 @@
 import logging
 
 from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect
+from django.core.paginator import Paginator, InvalidPage
+from django.http import Http404
 
 from common.views import ActionView
 from common.views import CreateView
@@ -18,6 +21,7 @@ from educacion.models import Resource
 from educacion.models import Exam
 from educacion.models import Question
 from educacion.models import Option
+from educacion.models import Selection
 
 from educacion.forms import CourseForm
 from educacion.forms import ProgramForm
@@ -26,9 +30,59 @@ from educacion.forms import ResourceForm
 from educacion.forms import ExamForm
 from educacion.forms import QuestionForm
 from educacion.forms import OptionForm
+from educacion.forms import SelectionForm
 
 
 logger = logging.getLogger('project.simple')
+
+
+class RelatedListMixin(object):
+    """
+    Agrega una lista de objetos relacionados
+    """
+
+    model_related = None
+    paginate_by = 10
+
+    def get_filters(self):
+        raise NotImplementedError
+
+    def related_queryset(self):
+        return self.model_related.objects.filter(**self.get_filters())
+
+    def paginate_queryset(self, queryset, page_size):
+        """
+        Paginate the queryset, if needed.
+        """
+        paginator = Paginator(queryset, page_size, allow_empty_first_page=True)
+        page = self.kwargs.get('page') or self.request.GET.get('page') or 1
+
+        try:
+            page_number = int(page)
+        except ValueError:
+            if page == 'last':
+                page_number = paginator.num_pages
+            else:
+                raise Http404(_(u"Page is not 'last', nor can it be converted to an int."))
+        try:
+            page = paginator.page(page_number)
+            return (paginator, page, page.object_list, page.has_other_pages())
+        except InvalidPage:
+            raise Http404(_(u'Invalid page (%(page_number)s)') % {
+                                'page_number': page_number
+            })
+
+    def get_context_data(self, **kwargs):
+        context = DetailView.get_context_data(self, **kwargs)
+        queryset = self.related_queryset()
+        paginator, page, queryset, is_paginated = self.paginate_queryset(queryset, self.paginate_by)
+        context.update({
+            'paginator': paginator,
+            'page_obj': page,
+            'is_paginated': is_paginated,
+            'object_list': queryset
+        })
+        return context
 
 
 class WithOwnerMixin(object):
@@ -73,7 +127,7 @@ class CreateCourse(LoginRequiredMixin, WithOwnerMixin, CreateView):
         return kwargs
 
 
-class DetailCourse(DetailView):
+class DetailCourse(RelatedListMixin, DetailView):
     """
     Muestra los detalles de un curso.
     """
@@ -82,11 +136,37 @@ class DetailCourse(DetailView):
     view_name = 'course_detail'
 
     model = Course
-
+    model_related = Lesson
+    
     templates = {
         'html': 'page.course_detail.html'
     }
     
+    def get_filters(self):
+        return dict(course__pk=self.object.id)
+
+    def related_queryset(self):
+        return self.model_related.objects.filter(**self.get_filters()).order_by('created_at')
+
+
+class DetailLesson(RelatedListMixin, DetailView):
+    """
+    Muestra los detalles de una lección.
+    """
+    
+    app_name = 'lessons'
+    view_name = 'lesson_detail'
+    
+    model = Lesson
+    model_related = Resource
+    
+    templates = {
+        'html': 'page.lesson_detail.html'
+    }
+    
+    def get_filters(self):
+        return dict(lesson__pk=self.object.id)
+
 
 class ListCourse(ListView):
     """
@@ -94,13 +174,23 @@ class ListCourse(ListView):
     """
 
     app_name = 'courses'
-    view_name = 'course_detail'
+    view_name = 'course_list'
     paginate_by = 10
 
     model = Course
 
     templates = {
         'html': 'page.course_list.html'
+    }
+
+class HomeView(ListCourse):
+    """
+    Muestra la página de inicio.
+    """
+    
+    view_name = 'home'
+    templates = {
+        'html': 'page.home.html'
     }
 
 
@@ -139,6 +229,41 @@ class EnrollView(LoginRequiredMixin, ActionView, SingleObjectMixin):
         return False
 
 
+class UnrollView(LoginRequiredMixin, ActionView, SingleObjectMixin):
+    """
+    Inscribe un usuario dentro de un curso.
+    """
+    confirm_message = _(u'Deseas desinscribirte de este curso?')
+    confirm = True
+    
+    success_message = _(u'Te perdimos, vamos a extrañarte')
+    fail_message = _(u'Hubo un problema, no se pudo desinscribir')
+    show_success_message = True
+    show_fail_message = True
+   
+    def get_object(self):
+        """
+        Retorna el objeto
+        """
+        
+        self.object = get_object_or_404(Course, pk=self.kwargs['pk'])
+        return self.object
+
+    def action(self, request, direction=None, **kwargs):
+        """
+        Ejecuta la acción
+        """
+
+        self.object = self.get_object()
+
+        if self.object.is_enrolled(request.user):
+            self.object.enrolled.remove(request.user)
+            return True
+        
+        self.fail_message = _(u'No estabas inscrito')
+        return False
+
+
 class CreateProgram(LoginRequiredMixin, WithOwnerMixin, CreateView):
     """
     Vista para mostrar el formulario y crear un programa de estudios.
@@ -154,7 +279,7 @@ class CreateProgram(LoginRequiredMixin, WithOwnerMixin, CreateView):
     }
 
 
-class DetailProgram(DetailView):
+class DetailProgram(RelatedListMixin, DetailView):
     """
     Muestra los detalles de un programa
     """
@@ -163,11 +288,30 @@ class DetailProgram(DetailView):
     view_name = 'program_detail'
     
     model = Program
+    model_related = Course
     
     templates = {
         'html': 'page.program_detail.html'
     }
+    
+    def get_filters(self):
+        return dict(program__pk=self.object.id)
 
+
+class ListProgram(ListView):
+    """
+    Muestra la lista de programas registrados en el sistema.
+    """
+    
+    app_name = 'programs'
+    view_name = 'program_list'
+    paginate_by = 10
+
+    model = Program
+
+    templates = {
+        'html': 'page.program_list.html'
+    }
     
 class CreateLesson(LoginRequiredMixin, WithOwnerMixin, CreateView):
     """
@@ -186,7 +330,7 @@ class CreateLesson(LoginRequiredMixin, WithOwnerMixin, CreateView):
     template_object = 'obj.lesson.html'
     
 
-class CreateResource(LoginRequiredMixin, CreateView):
+class CreateResource(LoginRequiredMixin, WithOwnerMixin, CreateView):
     """
     Vista para cargar un recurso.
     """
@@ -204,11 +348,9 @@ class CreateResource(LoginRequiredMixin, CreateView):
     template_object = 'obj.resource.html'
 
     def get_context_data(self, *args, **kwargs):
-        logger.info('***** get_context_data')
         context = super(CreateResource, self).get_context_data(*args, **kwargs)
         
-        if self.get_format() == 'json':
-            logger.info("    * content_type?: %s " % self.object.type)
+        if self.get_format() == 'json' and self.object is not None:
             context['type'] = self.object.type
         
         return context
@@ -263,3 +405,21 @@ class CreateOption(LoginRequiredMixin, CreateView):
     }
     
     template_object = 'obj.option.html'
+
+
+class CreateSelection(LoginRequiredMixin, WithOwnerMixin,CreateView):
+    """
+    Vista para seleccionar una opción.
+    """
+
+    app_name = 'options'
+    view_name = 'selection_create'
+
+    model = Selection
+    form_class = SelectionForm
+
+    templates = {
+        'html': 'page.selection_create.html'
+    }
+
+    template_object = 'obj.selection.html'

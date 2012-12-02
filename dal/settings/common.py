@@ -133,14 +133,15 @@ INSTALLED_APPS = (
     'south',
     'taggit',
 
+    # Dal
+    'educacion',
+
     # zero apps # Uncomment after syncdb
     'common', 
     'users',
     'thumbnails',
     'socialauth',
 
-    # Dal
-    'educacion',
 )
 
 
@@ -182,7 +183,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
         },  
         'django.request': {
             'handlers': ['mail_admins'],

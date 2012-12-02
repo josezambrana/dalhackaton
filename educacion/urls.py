@@ -4,15 +4,20 @@ from educacion.views import CreateCourse
 from educacion.views import DetailCourse
 from educacion.views import ListCourse
 from educacion.views import EnrollView
+from educacion.views import UnrollView
 
 from educacion.views import CreateProgram
 from educacion.views import DetailProgram
+from educacion.views import ListProgram
 
 from educacion.views import CreateLesson
 from educacion.views import CreateResource
 from educacion.views import CreateExam
 from educacion.views import CreateQuestion
 from educacion.views import CreateOption
+from educacion.views import CreateSelection
+
+from educacion.views import DetailLesson
 
 
 urlpatterns = patterns('',
@@ -20,19 +25,27 @@ urlpatterns = patterns('',
     url(r'^cursos$', ListCourse.as_view(), name='educacion_courselist'),
     url(r'^cursos/nuevo', CreateCourse.as_view(), name='educacion_coursecreate'),
     url(r'^cursos/(?P<pk>\d+)/inscribirse', EnrollView.as_view(), name='educacion_courseenroll'),
+    url(r'^cursos/(?P<pk>\d+)/desinscribirse', UnrollView.as_view(), name='educacion_courseunroll'),
     url(r'^cursos/(?P<slug>[\w\-]+)$', DetailCourse.as_view(), name='educacion_courseshow'),
     
     url(r'^programas/(?P<program_slug>[\w\-]+)/cursos/nuevo', CreateCourse.as_view(), name='educacion_program_coursecreate'),
-
+    
     # Programs
+    url(r'^programas$', ListProgram.as_view(), name='educacion_programlist'),
     url(r'^programas/nuevo', CreateProgram.as_view(), name="educacion_programcreate"),
     url(r'^programas/(?P<slug>[\w\-]+)$', DetailProgram.as_view(), name='educacion_programshow'),
     
     # Lecciones
     url(r'^lecciones/nuevo$', CreateLesson.as_view(), name="educacion_lessoncreate"),
+    url(r'^lecciones/(?P<slug>[\w\-]+)$', DetailLesson.as_view(), name="educacion_lessonshow"),
+
+    # Recursos
     url(r'^recursos/nuevo$', CreateResource.as_view(), name="educacion_resourcecreate"),
     url(r'^recursos/nuevo\.(?P<format>html|json)$', CreateResource.as_view(), name="educacion_resourcecreate"),
+
+    # Examenes
     url(r'^examenes/nuevo', CreateExam.as_view(), name="educacion_examcreate"),
     url(r'^preguntas/nuevo', CreateQuestion.as_view(), name="educacion_questioncreate"),
     url(r'^opciones/nuevo', CreateOption.as_view(), name="educacion_optioncreate"),
+    url(r'^seleccion/nuevo', CreateSelection.as_view(), name="educacion_selectioncreate"),
 )

@@ -42,12 +42,14 @@ class Course(Content):
     description = models.TextField(_(u'Descripción'))
 
     #: Usuarios inscritos
-    enrolled = models.ManyToManyField(User, related_name='courses')
+    enrolled = models.ManyToManyField(User, related_name='courses', 
+                                      blank=True)
 
     #: Programa al que pertenece
     program = models.ForeignKey(Program, verbose_name=_('Programa'), 
-                                  related_name='courses', null=True)
-
+                                  related_name='courses', null=True,
+                                  blank=True)
+    
     class Meta:
         verbose_name = _(u'Curso')
         verbose_name_plural = _(u'Cursos')
@@ -79,6 +81,10 @@ class Lesson(Content):
         verbose_name = _(u'Lección')
         verbose_name_plural = _(u'Lecciones')
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('educacion_lessonshow', [self.slug])
+
 
 RESOURCE_TYPES = (
     ('DOC', 'Document'),
@@ -86,7 +92,8 @@ RESOURCE_TYPES = (
     ('AUDIO', 'Audio'),
 )
 
-class Resource(models.Model):
+
+class Resource(Content):
     """
     Recurso video, pdf, doc, etc
     """
@@ -96,6 +103,9 @@ class Resource(models.Model):
     
     #: Tipo de Recurso
     type = models.CharField(max_length=5, choices=RESOURCE_TYPES, verbose_name=_(u'Tipo de recurso'))
+
+    #: Mimetype
+    mimetype = models.CharField(max_length=20, verbose_name=_(u'Mimetype'))
     
     #: Lección a la que pertenece el recurso
     lesson = models.ForeignKey(Lesson, verbose_name=_(u'Lección'))
@@ -156,6 +166,9 @@ class Question(models.Model):
         verbose_name = _(u'Pregunta')
         verbose_name_plural = _(u'Preguntas')
 
+    def __unicode__(self):
+        return self.question
+
 
 class Option(models.Model):
     """
@@ -177,4 +190,25 @@ class Option(models.Model):
     class Meta:
         verbose_name = _(u'Opción')
         verbose_name_plural = _(u'Opciones')
+
+class Selection(models.Model):
+    """
+    Selección de respuestas para las preguntas.
+    """
+
+    #: Pregunta
+    question = models.ForeignKey(Question, verbose_name=_(u'Pregunta'))
+
+    #: Option seleccionada
+    opcion = models.ForeignKey(Option, verbose_name=_(u'Selección'))
     
+    #: Usuario que respondio
+    user = models.ForeignKey(User, verbose_name=_(u'Usuario'))
+
+    #: Prueba a la que pertenece la respuesta
+    exam = models.ForeignKey(Exam, verbose_name=_(u'Examen'))
+    
+    class Meta:
+        verbose_name = _(u'Sección')
+        verbose_name_plural = _(u'Selecciones')
+

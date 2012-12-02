@@ -194,6 +194,7 @@ class ResourceTest(TestBase):
     def setUp(self):
         super(ResourceTest, self).setUp()
         self.data = {
+            "name": "Documento",
             "file": open(DOC_PATH),
             "lesson": 1,
         }
@@ -326,6 +327,40 @@ class OptionTest(TestBase):
         
         # Se verifica que se pueda pueda crear una opcion para una pregunta
         response = self.client_post_ajax('educacion_optioncreate', data=self.data)
+        assert response['success']
+        logger.info(' response: %s ' % response)
+
+
+class SelectionTest(TestBase):
+    """
+    Verifica el funcionamiento del gestor de selection de respuestas
+    """
+    
+    fixtures = ['courses', 'programs', 'users', 'lessons', 'resources', 'exams', 'questions', 'options']
+    
+    def setUp(self):
+        super(SelectionTest, self).setUp()
+        self.data = {
+            "question": "1",
+            "opcion": 1
+        }
+    
+    def test_create_option(self):
+        """
+        Como usuario debo ser capaz de crear la opción de respuesta para una pregunta.
+        """
+        
+        # Se verifica que los usuarios visitantes no puedan ingresar al formulario
+        self.assertLoginRequired('educacion_selectioncreate')
+        
+        self.login('admin', 'fakepass')
+        
+        # Se verifica que se pueda acceder al formulario.
+        response = self.client_get('educacion_selectioncreate')
+        assert response.status_code == 200
+        
+        # Se verifica que se pueda pueda crear una opcion para una pregunta
+        response = self.client_post_ajax('educacion_selectioncreate', data=self.data)
         assert response['success']
         logger.info(' response: %s ' % response)
 
